@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quản lý sinh viên</title>
+<meta name="theme-color" content="#0f6cbd"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="QLSV">
+<style>
+:root{--bg:#f5f6fa;--card:#fff;--tx:#1d2433;--mu:#6b7488;--bd:#e3e6ee;--pr:#4f46e5;--ok:#16a34a;--wa:#d97706;--er:#dc2626;--tr:#e9ebf3;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12141c;--card:#1b1e29;--tx:#e8eaf2;--mu:#98a0b5;--bd:#2b3042;--pr:#818cf8;--tr:#2b3042}}
+:root[data-theme="dark"]{--bg:#12141c;--card:#1b1e29;--tx:#e8eaf2;--mu:#98a0b5;--bd:#2b3042;--pr:#818cf8;--tr:#2b3042}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:16px 16px 0;max-width:1000px;margin:auto}
+h1{font-size:20px;margin:0 0 12px}
+nav{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+nav button{border:1px solid var(--bd);background:var(--card);color:var(--mu);padding:8px 14px;border-radius:999px;cursor:pointer;white-space:nowrap;font:inherit}
+nav button.on{background:var(--pr);color:#fff;border-color:var(--pr)}
+main{max-width:1000px;margin:auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
+.card h2{font-size:16px;margin:0 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px}
+.stat b{display:block;font-size:26px}.stat span{color:var(--mu);font-size:13px}
+.bar{height:8px;background:var(--tr);border-radius:9px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--pr);border-radius:9px}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bd)}
+.row:last-child{border:0}
+.row .g{flex:1;min-width:0}
+.mu{color:var(--mu);font-size:13px}
+.add{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+input,select,textarea{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;min-width:0}
+.add input{flex:1 1 140px}
+.btn{background:var(--pr);color:#fff;border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font:inherit}
+.del{background:none;border:0;color:var(--er);cursor:pointer;font-size:18px;padding:4px 8px}
+.tag{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--tr)}
+.late{color:var(--er)}
+.sc{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:520px}
+th,td{padding:8px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top;font-size:14px}
+td select{width:100%}td input{width:64px;margin-top:4px}
+.s-done{border-color:var(--ok)}.s-doing{border-color:var(--wa)}
+.empty{color:var(--mu);text-align:center;padding:18px}
+</style>
+</head>
+<body>
+<style>.alt{background:var(--tr);color:var(--tx)}.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}.login{max-width:380px;margin:30px auto}.login input,textarea{width:100%;margin-bottom:8px}
+#nav{position:fixed;top:0;left:0;bottom:0;width:280px;max-width:85%;background:var(--card);z-index:20;flex-direction:column;overflow-y:auto;padding:calc(16px + env(safe-area-inset-top,0px)) 12px 16px;transform:translateX(-105%);transition:transform .2s;border-right:1px solid var(--bd)}
+#nav.open{transform:none}#nav button{border-radius:10px;text-align:left;width:100%;border-color:transparent;flex:none}
+#ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:15}#ov.open{display:block}
+.mh{display:flex;gap:12px;align-items:center;padding:8px 4px 16px;margin-bottom:8px;border-bottom:1px solid var(--bd)}
+.av{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:var(--pr);color:#fff;font-weight:600;object-fit:cover;flex:none}
+.ro td select,.ro td input,.ro .add input,.ro .btn:not([data-ok]),.ro .del{pointer-events:none;opacity:.5}</style>
+<header><div class="top"><div style="display:flex;align-items:center;gap:10px"><button id="hb" class="btn alt" onclick="menu(true)" aria-label="Menu" style="font-size:20px;line-height:1">☰</button><h1 id="ttl" style="margin:0">🎓 Quản lý sinh viên</h1></div><div id="who"></div></div>
+</header><nav id="nav"></nav><div id="ov" onclick="menu(false)"></div><input type="file" id="af" accept="image/*" hidden onchange="setAv(this)">
+<main id="main"></main>
+<script>
+const KEY="qlsv_v1";
+const seed={tab:"home",
+students:[{id:1,name:"Nguyễn Văn An",code:"SV001",cls:"CNTT1"},{id:2,name:"Trần Thị Bình",code:"SV002",cls:"CNTT1"},{id:3,name:"Lê Minh Châu",code:"SV003",cls:"CNTT2"}],
+assignments:[{id:1,title:"Bài tập 1: Mảng và vòng lặp",due:"2026-10-15",desc:"Làm 5 bài cơ bản"},{id:2,title:"Đồ án giữa kỳ",due:"2026-11-05",desc:"Ứng dụng quản lý đơn giản"}],
+sub:{"1_1":{st:"done",sc:9},"1_2":{st:"doing",sc:""},"2_1":{st:"done",sc:8}},nid:10};
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!S||!S.students)S=seed;
+S.daily=S.daily||[];S.reports=S.reports||{};S.ps=S.ps||{};S.auditBase=S.auditBase||"";
+if(!S.projects)S.projects=[{id:5,title:"Đồ án: Website quản lý",due:"2026-12-20",desc:"Hoàn thiện theo từng giai đoạn",tasks:[{id:6,title:"Phân tích yêu cầu",due:"2026-10-25"},{id:7,title:"Thiết kế giao diện",due:"2026-11-10"},{id:8,title:"Lập trình chức năng",due:"2026-12-01"}]}];
+function save(){if(!DB)try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}push()}
+const $=s=>document.querySelector(s);
+const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const TG=[["home","Tổng quan"],["sv","Sinh viên"],["bt","Giao bài tập"],["td","Theo dõi tiến độ"],["bc","Báo cáo ngày"],["da","Bài tập lớn"],["pf","Hồ sơ"]];
+const TH=[["bai","Bài tập của tôi"],["ngay","Việc hằng ngày"],["da","Bài tập lớn"],["tt","Tiến độ"],["pf","Hồ sơ"]];
+const ICO={home:"🏠",sv:"👥",bt:"📝",td:"📊",bai:"📝",tt:"📈",pf:"👤",ngay:"✅",da:"📦",bc:"🗓️",tk:"🔑",dk:"🆕",nk:"🧾",tb:"📢"};
+const TP="gv123";let LR="gv";
+const ST={todo:"Chưa làm",doing:"Đang làm",done:"Hoàn thành"};
+const g=(a,s)=>({...(S.sub[a+"_"+s]||{st:"todo"}),sc:(S.gr||{})[a+"_"+s]??""});
+const pct=(n,d)=>d?Math.round(n/d*100):0;
+function stuProg(s){const A=S.assignments;const d=A.filter(a=>g(a.id,s.id).st==="done").length;
+const sc=A.map(a=>g(a.id,s.id).sc).filter(x=>x!==""&&!isNaN(x)).map(Number);
+return{d,p:pct(d,A.length),avg:sc.length?(sc.reduce((a,b)=>a+b,0)/sc.length).toFixed(1):"–"}}
+function bar(p){return `<div class="bar"><i style="width:${p}%"></i></div>`}
+function go(t){S.tab=t;save();menu(false);render()}
+function render(){
+const u=S.user;applyMode();
+if(!MODE){$("#hb").style.display="none";$("#nav").innerHTML="";$("#who").innerHTML="";$("#main").innerHTML=chooseV();return}
+$("#hb").style.display=u?"":"none";
+if(!u){$("#nav").innerHTML="";$("#who").innerHTML="";$("#main").innerHTML=loginV();return}
+if((MODE==="hs")!==(u.role==="hs")){const hs=u.role==="hs";setMode(hs?"hs":"ql");alert(hs?"Đây là tài khoản học sinh. Bạn sẽ được chuyển về cổng học sinh.":"Đây là tài khoản quản lý. Bạn sẽ được chuyển về cổng quản lý.");return}
+const me=S.students.find(s=>s.id===u.id);
+if(u.role==="hs"&&!me){S.user=null;save();return render()}
+const T=tabsFor();
+if(!T.some(t=>t[0]===S.tab))S.tab=T[0][0];
+const k=ak(),nm=u.role!=="hs"?(S.tname||"Giáo viên"):me.name;
+$("#who").innerHTML=`<span style="display:flex;align-items:center;gap:8px">${avt(k,34,nm)}<button class="btn alt" onclick="logout()" style="padding:5px 10px">Đăng xuất</button></span>`;
+$("#nav").innerHTML=`<div class="mh">${avt(k,52,nm)}<div><b>${esc(nm)}</b><div class="mu">${(ROLES[u.role]||ROLES.gv).n}</div></div></div>`
++T.map(([t,v])=>`<button class="${S.tab===t?"on":""}" onclick="go('${t}')">${ICO[t]} ${v}${t==="dk"&&regL().length?` <span class="tag" style="background:var(--wa);color:#fff">${regL().length}</span>`:""}</button>`).join("")
++`<button onclick="$('#af').click()">📷 Ảnh đại diện</button><button onclick="inst()">📲 Cài app</button>${u.role!=="hs"?`<button onclick="setMode('')">🔀 Đổi cổng</button>`:""}<button onclick="logout()">🚪 Đăng xuất</button><div class="mu" style="padding:10px 12px;font-size:12px">Phiên bản 10 · giao diện văn phòng</div>`;
+{const all=S.students;if(u.role!=="hs")S.students=vis();try{$("#main").innerHTML=pgT(T)+({home,sv,bt,td,bai,tt,pf,ngay,da,bc,tk,nk,tb,dk})[S.tab]()}finally{S.students=all}}$("#main").classList.toggle("ro",u.role!=="hs"&&!can("grade")&&!can("assign"))}
+const ak=()=>S.user.role!=="hs"?"gv":S.user.id;
+function avt(k,z,nm){const im=S.av&&S.av[k];const st=`width:${z}px;height:${z}px;font-size:${z/2.4}px`;
+return im?`<img class="av" style="${st}" src="${im}" alt="">`:`<span class="av" style="${st}">${esc((nm||"?").trim().split(" ").pop().charAt(0).toUpperCase())}</span>`}
+function menu(o){$("#nav").classList.toggle("open",o);$("#ov").classList.toggle("open",o)}
+function setAv(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();
+r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement("canvas");c.width=c.height=160;const x=c.getContext("2d");
+const m=Math.min(im.width,im.height);x.drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,160,160);
+S.av=S.av||{};S.av[ak()]=c.toDataURL("image/jpeg",.8);save();inp.value="";menu(false);render()};im.src=r.result};r.readAsDataURL(f)}
+function pf(){const t=S.user.role!=="hs",s=t?null:S.students.find(x=>x.id===S.user.id),nm=t?(S.tname||"Giáo viên"):s.name;
+return `<div class="card" style="text-align:center">${avt(ak(),96,nm)}<div><button class="btn alt" style="margin-top:10px" onclick="$('#af').click()">Đổi ảnh đại diện</button></div></div>
+<div class="card"><h2>Hồ sơ</h2><label class="mu">Họ tên</label><input id="pn" value="${esc(nm)}" style="width:100%;margin-bottom:8px">
+${t?`<label class="mu">Môn giảng dạy</label><input id="pe" value="${esc(S.subj||"")}" style="width:100%;margin-bottom:8px">`:`<div class="mu" style="margin-bottom:10px">Mã SV: ${esc(s.code)} · Lớp: ${esc(s.cls)}</div>`}
+<button class="btn" onclick="savePf()">Lưu</button></div>`}
+function savePf(){const n=$("#pn").value.trim();if(!n)return;if(S.user.role!=="hs"){const o=S.tname||"",os=S.subj||"",ns=$("#pe").value.trim();if(o!==n||os!==ns)log("Cập nhật hồ sơ cá nhân","Họ tên: "+(o||"(trống)")+" → "+n+(os!==ns?" · Môn giảng dạy: "+(os||"(trống)")+" → "+(ns||"(trống)"):""),"tk");S.tname=n;S.subj=ns}else S.students.find(x=>x.id===S.user.id).name=n;save();render()}
+function logout(){menu(false);if(DB)NOAUTO=true;if(S.user&&S.user.role!=="hs")log("Đăng xuất","","ht");S.user=null;save();render()}
+function bai(){return rem()+bai0()}
+function bai0(){const s=S.students.find(x=>x.id===S.user.id),A=S.assignments;
+return `<div class="card"><h2>Nộp bài</h2>${A.length?`<div class="add"><select id="sa">${A.map(a=>`<option value="${a.id}">${esc(a.title)}</option>`).join("")}</select><input id="snm" placeholder="Tên bài nộp"></div><div class="add"><input id="stx" placeholder="Nội dung / link bài làm"><select id="sst"><option value="doing">Đang làm</option><option value="done">Hoàn thành</option></select><button class="btn" onclick="submitB()">Nộp</button></div>`:'<div class="empty">Chưa có bài tập</div>'}</div>
+<div class="card"><h2>Danh sách bài tập</h2>${A.map(a=>{const c=g(a.id,s.id);return `<div class="row"><div class="g"><b>${esc(a.title)}</b><div class="mu">Hạn: ${esc(a.due||"—")} · ${esc(a.desc)}</div>${c.nm||c.txt?`<div class="mu">📎 ${esc(c.nm)} ${esc(c.txt)}</div>`:""}</div><div><span class="tag">${ST[c.st]}</span><div class="mu">Điểm: ${c.sc===""?"chưa chấm":esc(c.sc)}</div></div></div>`}).join("")}</div>`}
+function tt(){const s=S.students.find(x=>x.id===S.user.id),p=stuProg(s);
+return `<div class="grid"><div class="stat"><b>${p.p}%</b><span>Hoàn thành</span></div><div class="stat"><b>${p.avg}</b><span>Điểm TB</span></div><div class="stat"><b>${p.d}/${S.assignments.length}</b><span>Bài đã xong</span></div></div><div class="card"><h2>Chi tiết</h2>${bar(p.p)}${S.assignments.map(a=>`<div class="row"><span>${esc(a.title)}</span><span class="tag">${ST[g(a.id,s.id).st]}</span></div>`).join("")}</div>`}
+function submitB(){const a=$("#sa").value,k=a+"_"+S.user.id;S.sub[k]={...(S.sub[k]||{}),st:$("#sst").value,nm:$("#snm").value.trim(),txt:$("#stx").value.trim(),at:ymd(new Date())};save();render()}
+function home(){return regNote()+homeX()+home0()}
+function home0(){
+const A=S.assignments,St=S.students,tot=A.length*St.length;
+const done=A.reduce((n,a)=>n+St.filter(s=>g(a.id,s.id).st==="done").length,0);
+const today=ymd(new Date());
+const up=[...A].sort((a,b)=>a.due.localeCompare(b.due)).slice(0,5);
+return `<div class="grid"><div class="stat"><b>${St.length}</b><span>Sinh viên</span></div>
+<div class="stat"><b>${A.length}</b><span>Bài tập</span></div>
+<div class="stat"><b>${pct(done,tot)}%</b><span>Hoàn thành chung</span></div></div>
+<div class="card"><h2>Tiến độ từng sinh viên</h2>${St.length?St.map(s=>{const p=stuProg(s);return `<div class="row"><div class="g"><b>${esc(s.name)}</b> <span class="mu">${esc(s.code)}</span>${bar(p.p)}</div><div class="mu">${p.p}% · ĐTB ${p.avg}</div></div>`}).join(""):'<div class="empty">Chưa có sinh viên</div>'}</div>
+<div class="card"><h2>Hạn nộp sắp tới</h2>${up.length?up.map(a=>{const dn=St.filter(s=>g(a.id,s.id).st==="done").length;return `<div class="row"><div class="g"><b>${esc(a.title)}</b><div class="mu ${a.due<today?"late":""}">Hạn: ${esc(a.due)}${a.due<today?" (quá hạn)":""}</div></div><span class="tag">${dn}/${St.length} nộp</span></div>`}).join(""):'<div class="empty">Chưa có bài tập</div>'}</div>`}
+function sv0(){return `<div class="card"><h2>Thêm sinh viên</h2><div class="add">
+<input id="n" placeholder="Họ tên"><input id="c" placeholder="Mã SV"><input id="l" placeholder="Lớp"><input id="se" type="email" placeholder="Gmail (tùy chọn)"><button class="btn" onclick="addS()">Thêm</button></div>
+${S.students.length?S.students.map(s=>`<div class="row"><div class="g"><b>${esc(s.name)}</b><div class="mu">${esc(s.code)} · ${esc(s.cls)}${s.em?" · "+esc(s.em):""}</div></div>${linkedTo(s.id)?`<button class="del" style="color:var(--mu)" title="Gỡ liên kết tài khoản" onclick="unl(${s.id})">🔗</button>`:""}<button class="del" onclick="delS(${s.id})" aria-label="Xóa">✕</button></div>`).join(""):'<div class="empty">Chưa có sinh viên</div>'}</div>`}
+function sv(){const all=S.students,q=Q.sv.trim().toLowerCase();
+S.students=q?all.filter(s=>(s.name+" "+s.code+" "+s.cls).toLowerCase().includes(q)):all;
+let o;try{o=sv0()}finally{S.students=all}
+return o.replace('onclick="addS()">Thêm</button></div>','onclick="addS()">Thêm</button></div><input id="qs" placeholder="🔍 Tìm theo tên, mã, lớp" value="'+esc(Q.sv)+'" oninput="Q.sv=this.value;renderKeep()" style="width:100%;margin-bottom:8px">')}
+function bt(){return `<div class="card"><h2>Giao bài tập mới</h2><div class="add">
+<input id="t" placeholder="Tên bài tập"><input id="d" type="date"><input id="x" placeholder="Mô tả"><button class="btn" onclick="addA()">Thêm</button></div>
+${S.assignments.length?S.assignments.map(a=>`<div class="row"><div class="g"><b>${esc(a.title)}</b><div class="mu">Hạn: ${esc(a.due||"—")} · ${esc(a.desc)}</div></div><button class="del" onclick="delA(${a.id})" aria-label="Xóa">✕</button></div>`).join(""):'<div class="empty">Chưa có bài tập</div>'}</div>`}
+function td(){const A=S.assignments,St=S.students;
+if(!A.length||!St.length)return '<div class="card empty">Cần có ít nhất 1 sinh viên và 1 bài tập</div>';
+return `<div class="card sc"><h2>Bảng theo dõi tiến độ</h2><table><tr><th>Sinh viên</th>${A.map(a=>`<th>${esc(a.title)}</th>`).join("")}<th>Tổng</th></tr>
+${St.map(s=>{const p=stuProg(s);return `<tr><td><b>${esc(s.name)}</b><div class="mu">${esc(s.code)}</div></td>${A.map(a=>{const c=g(a.id,s.id);return `<td><select class="s-${c.st}" onchange="setSub(${a.id},${s.id},'st',this.value)">${Object.entries(ST).map(([k,v])=>`<option value="${k}" ${c.st===k?"selected":""}>${v}</option>`).join("")}</select><input type="number" min="0" max="10" step="0.5" placeholder="Điểm" value="${esc(c.sc)}" onchange="setSub(${a.id},${s.id},'sc',this.value)">${c.nm||c.txt?`<div class="mu">📎 ${esc(c.nm)} ${esc(c.txt)}</div>`:""}</td>`}).join("")}<td><b>${p.p}%</b><div class="mu">ĐTB ${p.avg}</div></td></tr>`}).join("")}</table></div>`}
+function delS(id){const s0=S.students.find(x=>x.id===id);if(!s0)return;if(!confirm("Xóa sinh viên này? Bài nộp, điểm, báo cáo và liên kết tài khoản của em cũng bị xóa."))return;
+const cn={sub:Object.keys(S.sub).filter(k=>k.endsWith("_"+id)).length,gr:Object.keys(S.gr).filter(k=>k.endsWith("_"+id)&&k[0]!=="f").length,rep:Object.keys(S.reports).filter(k=>k.startsWith(id+"_")).length,dl:S.daily.filter(x=>x.sid===id).length,acc:DB?Object.keys(ACC).filter(u=>ACC[u].role==="hs"&&ACC[u].id===id).length:0};
+log("Xóa sinh viên: "+s0.name,"Mã "+(s0.code||"chưa có")+" · Lớp "+(s0.cls||"—")+". Đồng thời xóa: "+cn.sub+" bài làm, "+cn.gr+" điểm, "+cn.rep+" báo cáo ngày, "+cn.dl+" việc hằng ngày; gỡ "+cn.acc+" liên kết tài khoản.","sv");
+S.students=S.students.filter(s=>s.id!==id);
+for(const o of [S.sub,S.ps,S.gm,S.gr])Object.keys(o).forEach(k=>{if(k.endsWith("_"+id)||k.startsWith("f_"+id+"_"))delete o[k]});
+Object.keys(S.reports).forEach(k=>{if(k.startsWith(id+"_"))delete S.reports[k]});
+S.daily=S.daily.filter(x=>x.sid!==id);
+if(DB){const us=Object.keys(ACC).filter(u=>ACC[u].role==="hs"&&ACC[u].id===id);us.forEach(u=>{delete ACC[u];DB.doc("work/"+u).delete().catch(()=>{})});if(us.length)aref.set({map:ACC}).catch(()=>{})}
+save();render()}
+function addA(){const t=$("#t").value.trim();if(!t)return;const d=$("#d").value,x=$("#x").value.trim();S.assignments.push({id:S.nid++,title:t,due:d,desc:x});log("Giao bài tập: "+t,"Hạn nộp: "+(d||"không có")+(x?" · Mô tả: "+trunc(x):""),"bt");save();render()}
+function delA(id){if(!confirm("Xóa bài tập này?"))return;const a0=S.assignments.find(a=>a.id===id);log("Xóa bài tập: "+(a0?a0.title:"?"),a0?"Hạn nộp: "+(a0.due||"không có"):"","bt");S.assignments=S.assignments.filter(a=>a.id!==id);save();render()}
+function setSub(a,s,f,v){const k=a+"_"+s,ti=aTitle(a),sn=sName(s);
+if(f==="sc"){if(v!=="")v=Math.min(10,Math.max(0,Math.round((+v||0)*2)/2));const o=S.gr[k];if(String(o??"")===String(v))return render();
+log("Chấm điểm: "+((S.students.find(x=>x.id===+s)||{}).name||"?"),"Bài: "+ti+" · Sinh viên: "+sn+" · Điểm: "+(o===undefined||o===""?"chưa chấm":o)+" → "+(v===""?"xóa điểm":v),"bt");S.gr[k]=v}
+else{const o=(S.sub[k]||{st:"todo"})[f];S.sub[k]={...(S.sub[k]||{st:"todo"}),[f]:v};DIRTY.add(s);
+if(f==="st"&&o!==v)log("Đổi trạng thái bài làm","Bài: "+ti+" · Sinh viên: "+sn+" · "+ST[o||"todo"]+" → "+ST[v],"bt")}
+save();render()}
+const td0=()=>ymd(new Date());
+let DD=td0();
+function setDD(v){DD=v||td0();render()}
+function streak(sid){let n=0;for(let i=0;i<365;i++){const d=ymd(new Date(Date.now()-i*864e5));if(S.reports[sid+"_"+d])n++;else if(i>0)break}return n}
+const g2=(t,s)=>S.ps[t+"_"+s]||{st:"todo",note:""};
+const pgP=(p,s)=>pct(p.tasks.filter(t=>g2(t.id,s).st==="done").length,p.tasks.length);
+function ngay(){return rem()+ngay0()}
+function ngay0(){const id=S.user.id,L=S.daily.filter(x=>x.sid===id&&x.date===DD),r=S.reports[id+"_"+DD]||{},dn=L.filter(x=>x.done).length;
+return `<div class="card"><div class="add"><input type="date" value="${DD}" onchange="setDD(this.value)"><span class="tag">🔥 Chuỗi báo cáo: ${streak(id)} ngày</span></div>
+<h2>Việc cần làm (${dn}/${L.length})</h2>${bar(pct(dn,L.length))}
+<div class="add" style="margin-top:10px"><input id="dt" placeholder="Thêm công việc..."><button class="btn" onclick="addD()">Thêm</button></div>
+${L.length?L.map(x=>`<div class="row"><label class="g"><input type="checkbox" ${x.done?"checked":""} onchange="togD(${x.id})"> <span style="${x.done?"text-decoration:line-through;color:var(--mu)":""}">${esc(x.text)}</span>${x.gv?' <span class="tag">GV giao</span>':""}</label>${x.gv?"":`<button class="del" onclick="delD(${x.id})">✕</button>`}</div>`).join(""):'<div class="empty">Chưa có việc nào</div>'}</div>
+<div class="card"><h2>Báo cáo ngày ${esc(DD)}</h2><textarea id="rt" rows="3" placeholder="Hôm nay bạn đã làm gì, gặp khó khăn gì?">${esc(r.txt||"")}</textarea><div class="add"><input id="rh" type="number" min="0" step="0.5" placeholder="Số giờ học" value="${esc(r.h||"")}"><button class="btn" onclick="saveR()">Lưu báo cáo</button></div>${S.gr["f_"+id+"_"+DD]?`<div class="mu">💬 Giáo viên: ${esc(S.gr["f_"+id+"_"+DD])}</div>`:""}</div>`}
+function addD(){const t=$("#dt").value.trim();if(!t)return;S.daily.push({id:Date.now()+Math.floor(Math.random()*999),sid:S.user.id,date:DD,text:t,done:false});save();render()}
+function togD(id){const x=S.daily.find(y=>y.id===id);x.done=!x.done;save();render()}
+function delD(id){S.daily=S.daily.filter(y=>y.id!==id);save();render()}
+function saveR(){const t=$("#rt").value.trim();if(!t)return alert("Hãy nhập nội dung báo cáo");const k=S.user.id+"_"+DD;S.reports[k]={...(S.reports[k]||{}),txt:t,h:$("#rh").value};save();render()}
+function bc(){return bcA()+bc0()}
+function bc0(){const St=S.students,n=St.filter(s=>S.reports[s.id+"_"+DD]).length;
+return `<div class="card"><div class="add"><input type="date" value="${DD}" onchange="setDD(this.value)"><span class="tag">${n}/${St.length} đã báo cáo</span></div>
+${St.map(s=>{const r=S.reports[s.id+"_"+DD],L=S.daily.filter(x=>x.sid===s.id&&x.date===DD),d=L.filter(x=>x.done).length;
+return `<div class="row" style="align-items:flex-start"><div class="g"><b>${esc(s.name)}</b> <span class="mu">🔥${streak(s.id)} · việc ${d}/${L.length}</span>${r?`<div>${esc(r.txt)}</div><div class="mu">⏱ ${esc(r.h||0)} giờ</div><input placeholder="Nhận xét của giáo viên..." value="${esc(S.gr["f_"+s.id+"_"+DD]||"")}" style="width:100%;margin-top:4px" onchange="fbR('${s.id}','${esc(DD)}',this.value)">`:'<div class="late">Chưa báo cáo</div>'}</div></div>`}).join("")}</div>`}
+function fbR(sid,d,v){const o=S.gr["f_"+sid+"_"+d]||"";if(o===v)return;S.gr["f_"+sid+"_"+d]=v;log("Nhận xét báo cáo ngày","Sinh viên: "+sName(sid)+" · Ngày báo cáo: "+d+" · "+(v?"Nhận xét: \""+trunc(v,120)+"\"":"đã xóa nhận xét"),"bc");save();render()}
+function da(){return S.user.role!=="hs"?daT():daS()}
+function daT(){const St=S.students;
+return `<div class="card"><h2>Tạo bài tập lớn</h2><div class="add"><input id="pt" placeholder="Tên bài tập lớn"><input id="pd" type="date"><input id="px" placeholder="Mô tả"><button class="btn" onclick="addP()">Tạo</button></div></div>`
++(S.projects.length?S.projects.map(p=>{const avg=St.length?Math.round(St.reduce((a,s)=>a+pgP(p,s.id),0)/St.length):0;
+return `<div class="card"><div class="row" style="border:0"><div class="g"><b>📦 ${esc(p.title)}</b>${p.ap==="pending"?` <span class="tag" style="background:var(--wa);color:#fff">Chờ duyệt</span>${can("approve")?` <button class="btn" data-ok="1" onclick="aprv(${p.id})">Duyệt</button>`:""}`:""}<div class="mu">Hạn: ${esc(p.due||"—")} · ${esc(p.desc)}</div></div><button class="del" onclick="delP(${p.id})">✕</button></div>
+${bar(avg)}<div class="mu">Tiến độ trung bình: ${avg}% · ${p.tasks.length} bài nhỏ</div>
+<div class="add" style="margin-top:10px"><input id="nt${p.id}" placeholder="Thêm bài tập nhỏ"><input id="nd${p.id}" type="date"><button class="btn" onclick="addT(${p.id})">Thêm</button></div>
+${p.tasks.map((t,i)=>`<div class="row"><div class="g">${i+1}. ${esc(t.title)} <span class="mu">Hạn ${esc(t.due||"—")}</span></div><span class="tag">${St.filter(s=>g2(t.id,s.id).st==="done").length}/${St.length}</span><button class="del" onclick="delT(${p.id},${t.id})">✕</button></div>`).join("")}
+<div class="add" style="margin-top:10px"><input id="gn${p.id}" placeholder="Tên nhóm mới"><button class="btn alt" onclick="addG(${p.id})">Tạo nhóm</button></div><div class="mu">Nhóm: ${(p.groups||[]).map(x=>esc(x.name)+" ("+grpAvg(p,x.id)+"%)").join(", ")||"chưa có"} · Tiến độ từng sinh viên</div>
+${St.map(s=>`<div class="row"><span class="g">${esc(s.name)}${bar(pgP(p,s.id))}</span><span class="mu">${pgP(p,s.id)}%</span>${grpSel(p,s.id)}</div>`).join("")}</div>`}).join(""):'<div class="card empty">Chưa có bài tập lớn</div>')}
+function daS(){const id=S.user.id;
+return S.projects.filter(p=>p.ap!=="pending").length?S.projects.filter(p=>p.ap!=="pending").map(p=>{const pr=pgP(p,id);
+return `<div class="card"><b>📦 ${esc(p.title)}</b><div class="mu">Hạn: ${esc(p.due||"—")} · ${esc(p.desc)}</div>${bar(pr)}<div class="mu">${pr}% hoàn thành</div>${grpInfo(p,id)}
+${p.tasks.map((t,i)=>{const c=g2(t.id,id);return `<div class="row"><div class="g">${i+1}. ${esc(t.title)}<div class="mu ${t.due&&t.due<td0()&&c.st!=="done"?"late":""}">Hạn ${esc(t.due||"—")}</div><input placeholder="Ghi chú / link" value="${esc(c.note)}" style="width:100%;margin-top:4px" onchange="setPS(${t.id},'note',this.value)"></div><select class="s-${c.st}" onchange="setPS(${t.id},'st',this.value)">${Object.entries(ST).map(([k,v])=>`<option value="${k}" ${c.st===k?"selected":""}>${v}</option>`).join("")}</select></div>`}).join("")}</div>`}).join(""):'<div class="card empty">Chưa có bài tập lớn</div>'}
+function setPS(t,f,v){const k=t+"_"+S.user.id;S.ps[k]={...g2(t,S.user.id),[f]:v};save();render()}
+function addP(){const t=$("#pt").value.trim();if(!t)return;S.projects.push({id:S.nid++,title:t,due:$("#pd").value,desc:$("#px").value.trim(),tasks:[],ap:can("approve")?"ok":"pending"});log("Tạo bài tập lớn: "+t,"Hạn: "+($("#pd").value||"không có")+" · Trạng thái: "+(can("approve")?"đã duyệt ngay":"chờ hiệu phó/hiệu trưởng duyệt")+($("#px").value.trim()?" · Mô tả: "+trunc($("#px").value):""),"da");save();render()}
+function delP(id){if(!confirm("Xóa bài tập lớn này?"))return;const p0=S.projects.find(x=>x.id===id);log("Xóa bài tập lớn: "+(p0?p0.title:"?"),p0?"Hạn: "+(p0.due||"không có")+" · Có "+p0.tasks.length+" bài nhỏ":"","da");S.projects=S.projects.filter(p=>p.id!==id);save();render()}
+function addT(id){const t=$("#nt"+id).value.trim();if(!t)return;S.projects.find(p=>p.id===id).tasks.push({id:S.nid++,title:t,due:$("#nd"+id).value});log("Thêm bài nhỏ: "+t,"Thuộc bài tập lớn: "+S.projects.find(p=>p.id===id).title+" · Hạn: "+($("#nd"+id).value||"không có"),"da");save();render()}
+function delT(pid,id){const p=S.projects.find(x=>x.id===pid),t0=p.tasks.find(t=>t.id===id);log("Xóa bài nhỏ: "+(t0?t0.title:"?"),"Thuộc bài tập lớn: "+p.title,"da");p.tasks=p.tasks.filter(t=>t.id!==id);save();render()}
+S.gm=S.gm||{};S.gr=S.gr||{};const DIRTY=new Set();
+let DB=null,UID=null,ACC={},sref=null,aref=null,ready=false,wt=null,last="",ISGV=false,NOAUTO=false,DP=null;
+const shJ=()=>JSON.stringify(SH.map(k=>S[k]));
+const linkedTo=id=>Object.values(ACC).some(a=>a.role==="hs"&&a.id===id);
+function setAcc(){if(DB&&S.user){ACC[UID]=S.user;aref.set({map:ACC}).catch(()=>{})}}
+function unl(id){if(!confirm("Gỡ liên kết tài khoản của sinh viên này?"))return;log("Gỡ liên kết tài khoản sinh viên","Sinh viên: "+sName(id),"tk");Object.keys(ACC).forEach(u=>{if(ACC[u].role==="hs"&&ACC[u].id===id)delete ACC[u]});aref.set({map:ACC}).catch(()=>{});render()}
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();DP=e});
+function inst(){menu(false);if(DP){DP.prompt();DP=null}else alert("Cài như app:\n• iPhone (Safari): nút Chia sẻ → Thêm vào MH chính\n• Android (Chrome): menu ⋮ → Cài đặt ứng dụng / Thêm vào màn hình chính")}
+try{const ic="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#4f46e5"/><text x="32" y="44" font-size="34" text-anchor="middle">🎓</text></svg>');
+const m={name:"Quản lý sinh viên",short_name:"QLSV",display:"standalone",start_url:location.href.split("#")[0],background_color:"#4f46e5",theme_color:"#4f46e5",icons:[{src:ic,sizes:"any",type:"image/svg+xml"}]};
+const l=document.createElement("link");l.rel="manifest";l.href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:"application/manifest+json"}));document.head.appendChild(l);
+const a=document.createElement("link");a.rel="apple-touch-icon";a.href=ic;document.head.appendChild(a)}catch(e){}
+initDB();
+const ROLES={admin:{n:"Quản trị",p:["accounts","audit","notice","students","assign","grade","approve","viewAll"]},
+hieutruong:{n:"Hiệu trưởng",p:["audit","notice","approve","viewAll"]},
+hieupho:{n:"Hiệu phó",p:["notice","approve","viewAll"]},
+chunhiem:{n:"Chủ nhiệm",p:["students","assign","grade","notice"]},
+gv:{n:"Giáo viên",p:["assign","grade","notice"]},
+hs:{n:"Học sinh",p:[]}};
+const can=p=>(ROLES[S.user&&S.user.role]||ROLES.gv).p.includes(p);
+const vis=()=>{const u=S.user;if(!u||u.role==="hs"||can("viewAll"))return S.students;return S.students.filter(s=>(u.cls||[]).map(ncls).includes(ncls(s.cls)))};
+function tabsFor(){if(S.user.role==="hs")return [...TH.slice(0,-1),["tb","Thông báo"],TH[TH.length-1]];
+const T=[["home","Tổng quan"]];if(can("students"))T.push(["sv","Sinh viên"]);if(can("assign"))T.push(["bt","Giao bài tập"]);
+T.push(["td","Theo dõi tiến độ"],["bc","Báo cáo ngày"],["da","Bài tập lớn"],["tb","Thông báo"]);
+if(can("students")||can("accounts"))T.push(["dk","Đăng ký học sinh"]);if(can("accounts"))T.push(["tk","Tài khoản"]);if(can("audit"))T.push(["nk","Nhật ký"]);T.push(["pf","Hồ sơ"]);return T}
+const LK={sv:"Sinh viên",bt:"Bài tập & điểm",dk:"Đăng ký",tk:"Tài khoản & quyền",tb:"Thông báo",da:"Bài tập lớn",bc:"Báo cáo ngày",ht:"Hệ thống"};
+const trunc=(t,n=80)=>{t=String(t??"").replace(/\s+/g," ").trim();return t.length>n?t.slice(0,n)+"…":t};
+const sName=id=>{const s=S.students.find(x=>x.id===+id);return s?s.name+" ("+(s.code||"chưa có mã")+(s.cls?", lớp "+s.cls:"")+")":"sinh viên không còn trong danh sách"};
+const aTitle=id=>{const a=S.assignments.find(x=>x.id===+id);return a?a.title:"(bài đã xóa)"};
+const accNm=u=>{const a=ACC[u];if(!a)return "?";if(a.role==="hs"){const s=S.students.find(z=>z.id===a.id);return s?s.name+" ("+(s.code||"chưa có mã")+")":"sinh viên đã xóa"}return a.lb||"Nhân viên"};
+function regD(r,ex,st){if(r.type==="gv")return "Giáo viên/quản lý · Gmail "+mask(r.em)+" · Lớp phụ trách: "+(r.cls||"—")+" · Vai trò được cấp: "+(ROLES[(ACC[r.uid]||{}).role]||ROLES.gv).n;
+return "Sinh viên · Gmail "+mask(r.em)+(st?" · Mã "+(st.code||"(chưa có)")+" · Lớp "+(st.cls||"—")+" · "+(ex?"gắn vào hồ sơ sinh viên đã có":"tạo hồ sơ sinh viên mới"):" · Mã đăng ký: "+(r.code||"—")+" · Lớp "+(r.cls||"—"))}
+function who(){const u=S.user;if(!u)return["Hệ thống",""];const r=(ROLES[u.role]||ROLES.gv).n;return[u.lb||S.tname||r,r]}
+/* Ghi một dòng nhật ký: a = việc đã làm, d = chi tiết (đối tượng, giá trị trước → sau), k = nhóm */
+function log(a,d,k){try{if(S.user&&S.user.role==="hs")return;const[u,r]=who(),A=S.audit||[];
+const e={n:(A[0]&&A[0].n||0)+1,t:ymd(Date.now())+" "+new Date().toTimeString().slice(0,8),u,r,k:k||"",a,d:d||""};
+let L=[e,...A];if(L.length>1500){const x=L[1500];if(x&&x.h)S.auditBase=x.h;L=L.slice(0,1500)}
+S.audit=L;seal()}catch(x){}}
+async function sha(x){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(x));return [...new Uint8Array(b)].map(y=>y.toString(16).padStart(2,"0")).join("")}
+const aKey=e=>JSON.stringify([e.n,e.t,e.u,e.r||"",e.k||"",e.a,e.d||"",e.p||""]);
+let AQ=Promise.resolve(),NKV=null,NK={q:"",k:"",f:"",t:""};
+function seal(){AQ=AQ.then(async()=>{const A=S.audit||[];if(!A.some(e=>e.n&&!e.h))return;if(!(window.crypto&&crypto.subtle)){save();return}
+for(let i=A.length-1;i>=0;i--){const e=A[i];if(!e.n||e.h)continue;const o=A[i+1];e.p=o?(o.h||"LEGACY"):(S.auditBase||"GENESIS");e.h=await sha(aKey(e))}
+save();if(S.user&&S.tab==="nk")rr()}).catch(()=>{})}
+async function verifyLog(){if(!(window.crypto&&crypto.subtle)){NKV={ok:false,msg:"Trình duyệt này không hỗ trợ kiểm tra mã xác thực.",t:""};return rr()}
+const A=S.audit||[];let ok=0,leg=0,pen=0,pn=null,first=null,last=null;const bad=[];
+for(let i=A.length-1;i>=0;i--){const e=A[i];if(!e.n){leg++;pn=null;continue}
+if(!e.h){pen++;continue}
+const o=A[i+1],ep=o?(o.h||"LEGACY"):(S.auditBase||"GENESIS"),w=[];
+if(pn!==null&&e.n!==pn+1)w.push("thiếu dòng từ #"+(pn+1)+" đến #"+(e.n-1));
+if(e.p!==ep)w.push("không nối khớp với dòng liền trước");
+if(await sha(aKey(e))!==e.h)w.push("nội dung đã bị thay đổi sau khi ghi");
+if(w.length)bad.push("#"+e.n+" ("+e.t+"): "+w.join(", "));else{ok++;if(first==null)first=e.n;last=e.n}
+pn=e.n}
+NKV=bad.length?{ok:false,msg:"❌ Phát hiện "+bad.length+" điểm bất thường: "+bad.slice(0,5).join(" | ")+(bad.length>5?" …":"")}
+:{ok:true,msg:"✅ Toàn vẹn: "+ok+" dòng có mã xác thực khớp"+(ok?", liên tục từ #"+first+" đến #"+last:"")+"."+(leg?" "+leg+" dòng cũ (ghi trước khi có xác thực) không kiểm tra được.":"")+(pen?" "+pen+" dòng đang chờ cấp mã.":"")};
+NKV.t=ymd(Date.now())+" "+new Date().toTimeString().slice(0,8);rr()}
+function nkF(){const q=NK.q.trim().toLowerCase();return (S.audit||[]).filter(e=>(!NK.k||(NK.k==="old"?!e.n:e.k===NK.k))&&(!NK.f||e.t.slice(0,10)>=NK.f)&&(!NK.t||e.t.slice(0,10)<=NK.t)&&(!q||(e.a+" "+(e.d||"")+" "+e.u+" "+(e.r||"")+" "+e.t).toLowerCase().includes(q)))}
+const rowN=e=>`<div class="row" style="align-items:flex-start"><div class="g"><b>${esc(e.a)}</b>${e.d?`<div>${esc(e.d)}</div>`:""}<div class="mu">${esc(e.t)} · ${esc(e.u)}${e.r&&e.r!==e.u?" ("+esc(e.r)+")":""}${e.k?` · <span class="tag">${esc(LK[e.k]||e.k)}</span>`:""} · ${e.n?"#"+e.n:"bản ghi cũ"}${e.h?" · mã "+esc(e.h.slice(0,8)):""}</div></div></div>`;
+function nk(){const A=S.audit||[],L=nkF(),sh=L.slice(0,300);
+return `<div class="card"><h2>Nhật ký hoạt động</h2>
+<p class="mu" style="margin:0 0 10px">Ghi lại ai đã làm gì, lúc nào, với đối tượng nào và giá trị cụ thể (trước → sau). Mỗi dòng có số thứ tự và mã xác thực nối với dòng liền trước: nếu có dòng bị sửa hoặc bị xóa ở giữa, nút “Kiểm tra tính toàn vẹn” sẽ báo.</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+<input id="nq" placeholder="🔍 Tìm theo người, hành động, nội dung" value="${esc(NK.q)}" oninput="NK.q=this.value;renderKeep()" style="flex:1 1 220px">
+<select id="nkk" onchange="NK.k=this.value;renderKeep()"><option value="">Tất cả nhóm</option>${Object.entries(LK).map(([k,v])=>`<option value="${k}" ${NK.k===k?"selected":""}>${v}</option>`).join("")}<option value="old" ${NK.k==="old"?"selected":""}>Bản ghi cũ</option></select>
+<input id="nkf" type="date" value="${esc(NK.f)}" title="Từ ngày" onchange="NK.f=this.value;renderKeep()"><input id="nkt" type="date" value="${esc(NK.t)}" title="Đến ngày" onchange="NK.t=this.value;renderKeep()"></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px"><button class="btn" data-ok="1" onclick="verifyLog()">🔍 Kiểm tra tính toàn vẹn</button><button class="btn alt" data-ok="1" onclick="dlLog()">⬇️ Tải CSV (toàn bộ)</button></div>
+${NKV?`<div class="card" style="border-color:${NKV.ok?"var(--ok)":"var(--er)"};margin-bottom:8px" id="nkv">${esc(NKV.msg)}<div class="mu">Kiểm tra lúc ${esc(NKV.t)}</div></div>`:""}
+<div class="mu">Tổng ${A.length} dòng · hiển thị ${sh.length}/${L.length} dòng khớp bộ lọc${L.length>300?" (300 dòng mới nhất; dùng bộ lọc hoặc tải CSV để xem thêm)":""}${A[0]&&A[0].h?` · Mã dòng mới nhất: <b>${esc(A[0].h.slice(0,12))}</b> (nên ghi lại định kỳ để đối chiếu)`:""}</div></div>
+<div class="card" id="nklist">${sh.map(rowN).join("")||'<div class="empty">Không có dòng nào</div>'}</div>
+<div class="card"><details><summary><b>Cách tự kiểm chứng độc lập</b></summary>
+<p class="mu">Mã xác thực của mỗi dòng = SHA-256 của chuỗi JSON <code>[STT, thời gian, người thực hiện, vai trò, mã nhóm, hành động, chi tiết, mã dòng liền trước]</code>. Dòng đầu tiên dùng mã trước là <code>GENESIS</code>. Bấm “Tải CSV” rồi dùng bất kỳ công cụ SHA-256 nào để tính lại và so với cột “Mã xác thực”.</p>
+<p class="mu"><b>Giới hạn:</b> việc kiểm tra phát hiện được dòng bị sửa hoặc bị xóa ở giữa, nhưng không phát hiện được việc xóa các dòng mới nhất, hay người có quyền ghi dữ liệu tính lại cả chuỗi. Vì vậy hãy lưu “Mã dòng mới nhất” ở nơi riêng (sổ, email) và tải CSV lưu trữ định kỳ. Hệ thống chỉ giữ 1500 dòng gần nhất.</p></details></div>`}
+function dlLog(){const A=(S.audit||[]).slice(),q=v=>'"'+String(v??"").replace(/"/g,'""')+'"';
+const rows=[["STT","Thời gian","Người thực hiện","Vai trò","Mã nhóm","Nhóm","Hành động","Chi tiết","Mã dòng liền trước","Mã xác thực"],...A.map(e=>[e.n||"",e.t,e.u,e.r||"",e.k||"",LK[e.k]||"",e.a,e.d||"",e.p||"",e.h||""])];
+const csv="﻿"+rows.map(r=>r.map(q).join(",")).join("\r\n");
+log("Xuất nhật ký ra file CSV",A.length+" dòng","ht");
+try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="nhat-ky-"+td0()+".csv";document.body.appendChild(a);a.click();a.remove()}catch(e){prompt("Sao chép nội dung CSV:",csv)}rr()}
+async function hsh(x){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(x.trim().toUpperCase()));return [...new Uint8Array(b)].map(y=>y.toString(16).padStart(2,"0")).join("")}
+function relog(){NOAUTO=false;autoLogin()}
+async function doLogin(){const v=$("#u").value.trim();if(!v)return;
+if(!DB&&v==="gv123"){S.user={role:"admin"};log("Đăng nhập quản trị","Chế độ cục bộ (mật khẩu quản trị)","ht");S.tab="";save();return render()}
+if(DB){const h=await hsh(v),iv=(S.inv||[]).find(i=>i.h===h);
+if(iv){if(iv.used||(iv.exp&&iv.exp<td0()))return alert("Mã mời đã dùng hoặc hết hạn");
+iv.used=UID;S.user={role:iv.role,cls:iv.cls||[],lb:iv.lb};log("Kích hoạt bằng mã mời: "+(iv.lb||(ROLES[iv.role]||ROLES.gv).n),"Vai trò: "+(ROLES[iv.role]||ROLES.gv).n+" · Lớp phụ trách: "+((iv.cls||[]).join(", ")||"không có"),"tk");S.tab="";setAcc();save();return render()}}
+const s=S.students.find(x=>x.code.toLowerCase()===v.toLowerCase());if(!s)return alert("Mã không hợp lệ");
+if(DB&&Object.entries(ACC).some(([u,a])=>a.role==="hs"&&a.id===s.id&&u!==UID))return alert("Mã này đã được liên kết với tài khoản khác");
+S.user={role:"hs",id:s.id};S.tab="";setAcc();save();render()}
+async function mkInv(){const r=$("#ir").value,c=$("#ic").value.split(",").map(x=>x.trim()).filter(Boolean),lb=$("#il").value.trim();
+const code=[...crypto.getRandomValues(new Uint8Array(10))].map(x=>"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[x%32]).join("");
+S.inv=[...(S.inv||[]),{h:await hsh(code),role:r,cls:c,lb,exp:ymd(new Date(Date.now()+7*864e5)),used:null}];
+log("Tạo mã kích hoạt cho: "+(lb||(ROLES[r]||ROLES.gv).n),"Vai trò: "+(ROLES[r]||ROLES.gv).n+" · Lớp phụ trách: "+(c.join(", ")||"không có")+" · Hạn 7 ngày, dùng 1 lần (bản thân mã không được lưu vào nhật ký)","tk");save();render();prompt("Mã mời (chỉ hiện 1 lần, hạn 7 ngày, dùng 1 lần). Gửi riêng cho người nhận:",code)}
+function delInv(i){const iv=S.inv[i];S.inv.splice(i,1);log("Xóa mã kích hoạt"+(iv&&iv.lb?" của "+iv.lb:""),iv?"Vai trò: "+(ROLES[iv.role]||ROLES.gv).n+" · "+(iv.used?"đã kích hoạt":"chưa dùng"):"","tk");save();render()}
+function setRole(u,v){if(u===UID&&v!=="admin"&&!confirm("Bạn sắp tự hạ quyền của chính mình. Tiếp tục?"))return render();const o0=ACC[u].role,nm0=accNm(u);ACC[u].role=v;log("Đổi vai trò tài khoản","Tài khoản: "+nm0+" · "+(ROLES[o0]||ROLES.gv).n+" → "+(ROLES[v]||ROLES.gv).n,"tk");aref.set({map:ACC}).catch(()=>{});render()}
+function rmAcc(u){if(!confirm("Gỡ tài khoản này?"))return;const nm0=accNm(u),ro0=(ROLES[ACC[u]&&ACC[u].role]||ROLES.gv).n;delete ACC[u];log("Gỡ tài khoản: "+nm0,"Vai trò đang có: "+ro0,"tk");aref.set({map:ACC}).catch(()=>{});render()}
+function tb(){const hs=S.user.role==="hs",me=hs&&S.students.find(s=>s.id===S.user.id),L=(S.notices||[]).filter(n=>!hs||n.to==="all"||(me&&n.to===me.cls));
+return (!hs&&can("notice")?`<div class="card"><h2>Gửi thông báo</h2><textarea id="ntx" rows="2" placeholder="Nội dung..."></textarea><div class="add"><select id="nto"><option value="all">Toàn trường</option>${[...new Set(S.students.map(s=>s.cls))].filter(Boolean).map(c=>`<option>${esc(c)}</option>`).join("")}</select><button class="btn" data-ok="1" onclick="sendN()">Gửi</button></div></div>`:"")
++`<div class="card"><h2>Thông báo</h2>${L.map(n=>`<div class="row"><span class="g">${esc(n.txt)}<div class="mu">${esc(n.by)} · ${esc(n.t)} · ${n.to==="all"?"toàn trường":esc(n.to)}</div></span>${!hs&&can("notice")?`<button class="del" data-ok="1" onclick="delN(${n.id})">✕</button>`:""}</div>`).join("")||'<div class="empty">Chưa có thông báo</div>'}</div>`}
+function sendN(){const t=$("#ntx").value.trim();if(!t)return;S.notices=[{id:S.nid++,txt:t,to:$("#nto").value,by:S.user.lb||ROLES[S.user.role].n,t:td0()},...(S.notices||[])];log("Gửi thông báo","Gửi tới: "+($("#nto").value==="all"?"toàn trường":"lớp "+$("#nto").value)+" · Nội dung: \""+trunc(t,120)+"\"","tb");save();render()}
+function delN(id){const n0=(S.notices||[]).find(n=>n.id===id);if(n0)log("Xóa thông báo","Đã gửi tới: "+(n0.to==="all"?"toàn trường":"lớp "+n0.to)+" · Nội dung: \""+trunc(n0.txt,120)+"\"","tb");S.notices=S.notices.filter(n=>n.id!==id);save();render()}
+let ME=null,MH=null,PEND=false,REG=[],RS=false;
+let Q={sv:"",dk:""};
+const ncls=c=>String(c||"").trim().toUpperCase().replace(/\s+/g,"");
+function ymd(d){const x=new Date(d);return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0")}
+function clList(){return `<datalist id="cl">${[...new Set(S.students.map(s=>s.cls).filter(Boolean))].map(c=>`<option value="${esc(c)}">`).join("")}</datalist>`}
+function renderKeep(){const m=document.getElementById("main"),keep={},ae=document.activeElement;
+m.querySelectorAll("input[id],textarea[id],select[id]").forEach(e=>{if(["hidden","checkbox","file"].includes(e.type))return;if(e.tagName==="SELECT"||e.value!==e.defaultValue)keep[e.id]=e.value});
+const fid=ae&&ae.id&&m.contains(ae)?ae.id:null;let ss=null;try{if(fid&&ae.selectionStart!=null)ss=[ae.selectionStart,ae.selectionEnd]}catch(x){}
+render();
+for(const id in keep){const e=document.getElementById(id);if(e)e.value=keep[id]}
+if(fid){const e=document.getElementById(fid);if(e){e.focus();try{if(ss)e.setSelectionRange(ss[0],ss[1])}catch(x){}}}}
+const lsReg=()=>{try{localStorage.setItem(KEY+"_reg",JSON.stringify(REG))}catch(e){}};
+if(!window.claude){try{REG=JSON.parse(localStorage.getItem(KEY+"_reg"))||[]}catch(e){}}
+const regL=()=>{const u=S.user;if(!u)return [];return REG.filter(r=>r.type==="gv"?can("accounts"):(can("viewAll")||(u.cls||[]).map(ncls).includes(ncls(r.cls))))};
+function regNote(){if(!(can("students")||can("accounts")))return "";const n=regL().length;
+return n?`<div class="card" style="border-color:var(--wa)"><h2>🆕 ${n} đăng ký học sinh chờ duyệt</h2><button class="btn" data-ok="1" onclick="go('dk')">Xem và duyệt</button></div>`:""}
+function regCard(){return `<div class="card login"><h2>Đăng ký học sinh</h2><p class="mu">Gửi yêu cầu, giáo viên sẽ duyệt.</p><input type="hidden" id="rt" value="hs"><input id="rn" placeholder="Họ tên"><input id="re" type="email" placeholder="Gmail của bạn"><input id="rc" placeholder="Mã sinh viên (nếu có)"><input id="rl" placeholder="Lớp" list="cl">${clList()}<button class="btn" onclick="sendReg()">Gửi đăng ký</button></div>`}
+function localV(){return `<div class="card login"><h2>Đăng nhập (cục bộ)</h2><input id="u" placeholder="gv123 = quản trị, hoặc mã sinh viên"><button class="btn" onclick="doLogin()">Đăng nhập</button></div>`+(MODE==="ql"?"":regCard())}
+const mask=e=>{const[a,b]=e.split("@");return a.slice(0,2)+"***@"+b};
+async function addS(){const n=$("#n").value.trim();if(!n)return;const em=($("#se").value||"").trim().toLowerCase();
+const o={id:S.nid++,name:n,code:$("#c").value.trim(),cls:ncls($("#l").value)};
+if(em.includes("@")){o.eh=await hsh(em);o.em=mask(em)}
+S.students.push(o);log("Thêm sinh viên: "+n,"Mã "+(o.code||"chưa có")+" · Lớp "+(o.cls||"—")+(o.em?" · Gmail "+o.em:""),"sv");save();render()}
+function subReg(){if(RS)return;RS=true;DB.collection("reg").onSnapshot(q=>{REG=q.docs.map(d=>d.data());if(S.user)rr()},()=>{})}
+async function addStaff(){const em=$("#ie").value.trim().toLowerCase();if(!em.includes("@"))return alert("Nhập email hợp lệ");
+S.staff=[...(S.staff||[]),{h:await hsh(em),em:mask(em),role:$("#ir").value,cls:$("#ic").value.split(",").map(x=>x.trim()).filter(Boolean),lb:$("#il").value.trim()}];
+log("Cấp tài khoản nhân viên: "+mask(em));save();render()}
+function delStaff(i){if(!confirm("Thu hồi quyền của người này?"))return;S.staff.splice(i,1);log("Thu hồi tài khoản nhân viên");save();render()}
+async function sendReg(){const n=$("#rn").value.trim(),e=$("#re").value.trim().toLowerCase();
+if(!n||!/^[^@\s]+@gmail\.com$/.test(e))return alert("Nhập họ tên và Gmail hợp lệ (@gmail.com)");if(!ncls($("#rl").value))return alert("Hãy nhập lớp");
+if(!DB){if(REG.some(x=>x.em===e))return alert("Gmail này đã gửi đăng ký rồi");REG.push({uid:"L"+Date.now(),type:"hs",name:n,em:e,code:$("#rc").value.trim(),cls:ncls($("#rl").value),t:td0()});lsReg();alert("Đã gửi đăng ký! Giáo viên sẽ duyệt trong mục \"Đăng ký học sinh\".");render();return}
+try{await DB.doc("reg/"+UID).set({uid:UID,type:$("#rt").value,name:n,em:e,code:$("#rc").value.trim(),cls:ncls($("#rl").value),t:td0()});PEND=true;render()}catch(x){alert("Không gửi được đăng ký (có thể bạn chưa có quyền ghi)")}}
+function dk(){const u=S.user,q=Q.dk.trim().toLowerCase(),L=REG.filter(r=>!q||(r.name+" "+r.em+" "+(r.code||"")+" "+(r.cls||"")).toLowerCase().includes(q)).filter(r=>r.type==="gv"?can("accounts"):(can("viewAll")||(u.cls||[]).map(ncls).includes(ncls(r.cls))));
+return `<div class="card"><h2>Đăng ký chờ duyệt (${L.length})</h2><input id="qd" placeholder="🔍 Tìm theo tên, Gmail, mã, lớp" value="${esc(Q.dk)}" oninput="Q.dk=this.value;renderKeep()" style="width:100%;margin-bottom:8px">${L.map(r=>`<div class="row"><div class="g"><b>${esc(r.name)}</b> <span class="tag">${r.type==="gv"?"Giáo viên":"Sinh viên"}</span><div class="mu">${esc(r.em)} · Mã: ${esc(r.code||"—")} · Lớp: ${esc(r.cls||"—")} · ${esc(r.t)}</div></div>${r.type==="gv"?`<select id="rr${esc(r.uid)}">${Object.entries(ROLES).filter(([k])=>k!=="hs").map(([k,v])=>`<option value="${k}" ${k==="gv"?"selected":""}>${v.n}</option>`).join("")}</select>`:""}<button class="btn" data-ok="1" onclick="okReg('${esc(r.uid)}')">Duyệt</button><button class="del" data-ok="1" onclick="noReg('${esc(r.uid)}')">✕</button></div>`).join("")||'<div class="empty">Không có đăng ký mới</div>'}</div>`}
+function setCls(u){const v=prompt("Lớp phụ trách (cách nhau dấu phẩy):",(ACC[u].cls||[]).join(", "));if(v===null)return;const o0=(ACC[u].cls||[]).join(", ");ACC[u].cls=v.split(",").map(x=>x.trim()).filter(Boolean);log("Đổi lớp phụ trách","Tài khoản: "+accNm(u)+" · "+(o0||"không có")+" → "+(ACC[u].cls.join(", ")||"không có"),"tk");aref.set({map:ACC}).catch(()=>{});render()}
+function tk(){return tkA()+tk0()}
+function tk0(){return `<div class="card"><h2>Tài khoản đã được cấp</h2><p class="mu">Tài khoản quản lý chỉ được thêm thủ công ở mục phía trên.</p>${Object.entries(ACC).map(([u,a])=>{const st=a.role==="hs"?S.students.find(z=>z.id===a.id):null;return `<div class="row"><div class="g"><b>${esc(st?st.name:(a.lb||"Nhân viên"))}</b> <span class="mu">${esc(st&&st.em||"")} ${u===UID?"(bạn)":""}</span>${a.role!=="hs"?`<div class="mu">Lớp: ${esc((a.cls||[]).join(", ")||"—")} <a href="#" onclick="setCls('${esc(u)}');return false">sửa</a></div>`:""}</div><select onchange="setRole('${esc(u)}',this.value)">${Object.entries(ROLES).map(([k,v])=>`<option value="${k}" ${a.role===k?"selected":""}>${v.n}</option>`).join("")}</select><button class="del" onclick="rmAcc('${esc(u)}')">✕</button></div>`}).join("")||'<div class="empty">Chưa có</div>'}</div>`}
+let FQ=false;let MODE=(["hs","ql"].includes(location.hash.slice(1))?location.hash.slice(1):"")||(()=>{try{return localStorage.getItem(KEY+"_m")||""}catch(e){return ""}})();
+const DKM=()=>!!(window.matchMedia&&matchMedia("(prefers-color-scheme:dark)").matches);
+function pgT(T){const t=T.find(x=>x[0]===S.tab);return t?`<div class="pg">${ICO[t[0]]||""} ${esc(t[1])}</div>`:""}
+function applyMode(){const r=document.documentElement,t=$("#ttl");
+if(MODE==="ql"){r.style.setProperty("--hd","#217346");r.style.setProperty("--pr",DKM()?"#2e9a62":"#217346");t.textContent="🛠️ Cổng quản lý"}
+else if(MODE==="hs"){r.style.setProperty("--hd","#0f6cbd");r.style.setProperty("--pr",DKM()?"#2b88d8":"#0f6cbd");t.textContent="🎓 Cổng học sinh"}
+else{r.style.removeProperty("--pr");r.style.removeProperty("--hd");t.textContent="🎓 Quản lý sinh viên"}}
+function setMode(m){MODE=m;menu(false);try{localStorage.setItem(KEY+"_m",m)}catch(e){}
+try{history.replaceState(null,"",m?"#"+m:location.pathname+location.search)}catch(e){}render()}
+addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(h==="hs"||h==="ql")setMode(h)});
+function chooseV(){return `<div class="card login"><h2>Chọn cổng vào</h2><button class="btn" style="width:100%;margin-bottom:10px;padding:14px" onclick="setMode('hs')">🎓 Cổng học sinh</button><button class="btn alt" style="width:100%;margin-bottom:10px;padding:14px" onclick="setMode('hs')">🆕 Đăng ký học sinh</button><button class="btn" style="width:100%;padding:14px;background:#217346" onclick="setMode('ql')">🛠️ Cổng quản lý (giáo viên, hiệu phó, hiệu trưởng)</button><p class="mu">Hai cổng dùng chung một dữ liệu. Có thể mở thẳng bằng cách thêm <b>#hs</b> hoặc <b>#ql</b> vào cuối đường dẫn.</p></div>`}
+function mismV(){const hs=S.user.role==="hs";return `<div class="card login"><h2>Sai cổng đăng nhập</h2><p>Tài khoản của bạn là <b>${esc((ROLES[S.user.role]||ROLES.gv).n)}</b>. Hãy dùng ${hs?"cổng học sinh":"cổng quản lý"}.</p><button class="btn" onclick="setMode('${hs?"hs":"ql"}')">Mở ${hs?"cổng học sinh":"cổng quản lý"}</button></div>`}
+async function autoLogin(){if(S.user||NOAUTO||!ready||!DB)return;
+const a=ACC[UID];
+if(ISGV)S.user={role:"admin"};
+else if(a)S.user=a;
+else{try{PEND=(await DB.doc("reg/"+UID).get()).exists}catch(e){}if(!MODE)setMode("hs")}
+if(S.user&&!MODE)setMode(S.user.role==="hs"?"hs":"ql");
+wsub();if(S.user&&(can("students")||can("accounts")))subReg();
+render()}
+function loginV(){return outV()||loginV0()}
+function outV(){if(!DB||!NOAUTO||!(ISGV||ACC[UID]))return "";
+return `<div class="card login"><h2>Đã đăng xuất</h2><p>Ứng dụng nhận diện bạn theo tài khoản claude.ai đang đăng nhập trên trình duyệt này. Muốn dùng tài khoản khác: đăng xuất hoặc chuyển tài khoản trong claude.ai, rồi mở lại link này.</p><button class="btn" style="width:100%;margin-bottom:8px" onclick="relog()">Đăng nhập lại tài khoản này</button><button class="btn alt" style="width:100%" onclick="setMode('')">Chọn cổng khác</button></div>`}
+function loginV0(){if(!DB)return localV();
+if(!DB)return `<div class="card login"><h2>Đăng nhập (cục bộ)</h2><input id="u" placeholder="gv123 = quản trị, hoặc mã sinh viên"><button class="btn" onclick="doLogin()">Đăng nhập</button></div>`;
+if(!ready)return '<div class="card empty">Đang tải... (nếu quá lâu, chủ trang cần mở trang trước để khởi tạo dữ liệu)</div>';
+if(PEND)return '<div class="card login"><h2>⏳ Đã gửi đăng ký</h2><p>Đăng ký của bạn đang chờ duyệt. Khi được duyệt, mở lại trang là vào được.</p></div>';
+if(MODE==="ql")return `<div class="card login"><h2>Kích hoạt tài khoản quản lý</h2><p class="mu">Nhập mã kích hoạt do quản trị cấp.</p><input id="u" placeholder="Mã kích hoạt" autocomplete="off"><button class="btn" onclick="activate()">Kích hoạt</button><p class="mu"><a href="#" onclick="setMode('hs');return false">← Về cổng học sinh</a></p></div>`;
+return `<div class="card login"><h2>Đăng ký học sinh</h2><p class="mu">Gửi yêu cầu, giáo viên sẽ duyệt.</p><input type="hidden" id="rt" value="hs"><input id="rn" placeholder="Họ tên"><input id="re" type="email" placeholder="Gmail của bạn"><input id="rc" placeholder="Mã sinh viên (nếu có)"><input id="rl" placeholder="Lớp" list="cl">${clList()}<button class="btn" onclick="sendReg()">Gửi đăng ký</button></div>`}
+async function activate(){const v=$("#u").value.trim();if(!v)return;const h=await hsh(v),iv=(S.inv||[]).find(i=>i.h===h);
+if(!iv||iv.used||(iv.exp&&iv.exp<td0()))return alert("Mã không hợp lệ, đã dùng hoặc hết hạn");
+iv.used=UID;S.user={role:iv.role,cls:iv.cls||[],lb:iv.lb};log("Kích hoạt tài khoản quản lý: "+(iv.lb||(ROLES[iv.role]||ROLES.gv).n),"Vai trò: "+(ROLES[iv.role]||ROLES.gv).n+" · Lớp phụ trách: "+((iv.cls||[]).join(", ")||"không có"),"tk");S.tab="";setAcc();save();render()}
+function tkA(){return `<div class="card"><h2>Thêm tài khoản quản lý</h2><div class="add"><input id="il" placeholder="Họ tên"><select id="ir">${Object.entries(ROLES).filter(([k])=>k!=="hs").map(([k,v])=>`<option value="${k}" ${k==="gv"?"selected":""}>${v.n}</option>`).join("")}</select><input id="ic" placeholder="Lớp phụ trách (vd: CNTT1, CNTT2)"><button class="btn" onclick="mkInv()">Tạo mã kích hoạt</button></div><p class="mu">Gửi riêng mã cho người đó. Họ mở cổng quản lý (#ql) và nhập mã một lần là có tài khoản. Mã dùng 1 lần, hạn 7 ngày.</p>${(S.inv||[]).map((i,x)=>`<div class="row"><div class="g">${esc(i.lb||"—")} · ${(ROLES[i.role]||ROLES.gv).n}<div class="mu">Lớp: ${esc((i.cls||[]).join(", ")||"không có")} · hạn ${esc(i.exp)} · ${i.used?"đã kích hoạt":"chờ kích hoạt"}</div></div><button class="del" onclick="delInv(${x})">✕</button></div>`).join("")}</div>`}
+const SH=["students","assignments","projects","gm","nid","inv","audit","auditBase","notices","gr"];
+let WS=false,MIG=false,lastW="",RQ=0,EA=0,RT=0,PD=0,BUSY=false;
+addEventListener("pointerdown",()=>{PD=Date.now()},true);
+const rr=()=>{clearTimeout(RT);cancelAnimationFrame(RQ);const w=500-(Date.now()-PD);if(w>0)RT=setTimeout(rr,w);else RQ=requestAnimationFrame(renderKeep)};
+const er=()=>toast("Không lưu được: bạn chưa có quyền ghi phần dữ liệu này.");
+const uidOf=sid=>Object.keys(ACC).find(u=>ACC[u].role==="hs"&&ACC[u].id===sid);
+function wdoc(sid){const e=(o,f)=>Object.fromEntries(Object.entries(o).filter(([k])=>f(k)));
+return {sid,sub:e(S.sub,k=>k.endsWith("_"+sid)),ps:e(S.ps,k=>k.endsWith("_"+sid)),reports:e(S.reports,k=>k.startsWith(sid+"_")),daily:S.daily.filter(x=>x.sid===sid)}}
+function fold(w){const sid=w.sid;if(sid==null)return;
+S.daily=S.daily.filter(x=>x.sid!==sid).concat(w.daily||[]);
+Object.assign(S.sub,w.sub||{});Object.assign(S.ps,w.ps||{});Object.assign(S.reports,w.reports||{})}
+function wchg(){const g2=JSON.stringify([S.sub,S.ps,S.daily,S.reports]);if(g2===lastW)return;lastW=g2;rr()}
+function wsub(){if(WS||!S.user||!DB)return;WS=true;
+if(S.user.role==="hs")DB.doc("work/"+UID).onSnapshot(x=>{if(x.exists){fold(x.data());wchg()}},()=>{});
+else DB.collection("work").onSnapshot(q=>{q.docs.forEach(x=>fold(x.data()));wchg()},()=>{})}
+function push(){if(!DB||!ready)return;clearTimeout(wt);wt=setTimeout(()=>{const u=S.user;if(!u)return;
+if(u.role==="hs"){DB.doc("work/"+UID).set(wdoc(u.id)).catch(er);return}
+const d={};SH.forEach(k=>d[k]=S[k]);last=shJ();sref.set(d).catch(er);
+DIRTY.forEach(sid=>{const uid=uidOf(sid);if(uid)DB.doc("work/"+uid).set(wdoc(sid)).catch(er)});DIRTY.clear()},400)}
+function migrate(x){Object.entries(x.sub||{}).forEach(([k,v])=>{if(v&&v.sc!==undefined&&v.sc!=="")S.gr[k]=v.sc});
+Object.entries(x.reports||{}).forEach(([k,v])=>{if(v&&v.fb)S.gr["f_"+k]=v.fb});
+S.sub=x.sub||S.sub;S.ps=x.ps||S.ps;S.daily=x.daily||S.daily;S.reports=x.reports||S.reports;
+setTimeout(()=>{Object.keys(ACC).forEach(u=>{if(ACC[u].role==="hs")DB.doc("work/"+u).set(wdoc(ACC[u].id)).catch(er)});push()},1500)}
+async function initDB(){try{
+if(!window.claude)return;
+const u=await claude.use("user"),d=await claude.use("db");if(!u||!d)return;
+UID=await u.id();ISGV=await u.isOwner();DB=d;S.user=null;try{localStorage.removeItem(KEY)}catch(e){}
+sref=d.doc("app/state");aref=d.doc("app/accounts");
+aref.onSnapshot(x=>{ACC=(x.exists&&x.data().map)||{};autoLogin()},()=>{});
+sref.onSnapshot(x=>{
+if(!x.exists){if(ISGV&&!ready){ready=true;push();autoLogin()}return}
+const v=x.data(),b=shJ();ready=true;
+SH.forEach(k=>{if(v[k]!==undefined)S[k]=v[k]});
+if(v.sub!==undefined&&ISGV&&!MIG){MIG=true;migrate(v)}
+if(shJ()===b){autoLogin();return}
+last=shJ();autoLogin();rr()},()=>{});
+rr()}catch(e){}}
+try{new MutationObserver(()=>document.querySelectorAll("#main input:not([maxlength]),#main textarea:not([maxlength])").forEach(e=>e.maxLength=e.tagName==="TEXTAREA"?2000:300)).observe(document.getElementById("main"),{childList:true,subtree:true})}catch(e){}
+function toast(m){let t=document.getElementById("toast");if(!t){t=document.createElement("div");t.id="toast";t.style.cssText="position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#1d2433;color:#fff;padding:10px 16px;border-radius:10px;z-index:50;max-width:90%;font-size:14px";document.body.appendChild(t)}t.textContent=m;t.style.display="block";clearTimeout(t._t);t._t=setTimeout(()=>t.style.display="none",4500)}
+async function okReg(uid){
+if(!DB){const r=REG.find(x=>x.uid===uid);if(!r)return;let st=r.code&&S.students.find(x=>x.code.toLowerCase()===r.code.toLowerCase());
+const ex=!!st;if(!st){const id=S.nid++;st={id,name:r.name,code:r.code||("SV"+String(id).padStart(3,"0")),cls:r.cls};S.students.push(st)}
+st.em=mask(r.em);REG=REG.filter(x=>x.uid!==uid);lsReg();log("Duyệt đăng ký: "+r.name,regD(r,ex,st),"dk");save();toast("Đã duyệt: "+r.name+" · Mã đăng nhập: "+st.code);return rr()}
+if(BUSY)return;const r=REG.find(x=>x.uid===uid);if(!r)return toast("Không tìm thấy đăng ký, hãy tải lại trang");
+BUSY=true;toast("Đang duyệt...");const bk=JSON.stringify([S.students,ACC,S.nid]);
+try{
+if(r.type==="gv"){if(!can("accounts"))throw new Error("chỉ quản trị mới duyệt được giáo viên");
+const role=(document.getElementById("rr"+uid)||{}).value||"gv";ACC[uid]={role,cls:(r.cls||"").split(",").map(x=>x.trim()).filter(Boolean),lb:r.name}}
+else{let st=r.code&&S.students.find(x=>x.code.toLowerCase()===r.code.toLowerCase()&&!linkedTo(x.id));
+var ex=!!st;if(!st){st={id:S.nid++,name:r.name,code:r.code||"",cls:r.cls};S.students.push(st)}
+st.em=mask(r.em);ACC[uid]={role:"hs",id:st.id};var stD=st}
+await aref.set({map:ACC});await DB.doc("reg/"+uid).delete();
+log("Duyệt đăng ký: "+r.name,regD(r,ex,stD),"dk");REG=REG.filter(x=>x.uid!==uid);save();toast("Đã duyệt: "+r.name)}
+catch(e){const b=JSON.parse(bk);S.students=b[0];ACC=b[1];S.nid=b[2];toast("Duyệt thất bại: "+((e&&e.message)||e))}
+finally{BUSY=false;rr()}}
+async function noReg(uid){if(!DB){const r=REG.find(x=>x.uid===uid);REG=REG.filter(x=>x.uid!==uid);lsReg();if(r)log("Từ chối đăng ký: "+r.name,regD(r),"dk");save();toast("Đã từ chối đăng ký");return rr()}
+const r=REG.find(x=>x.uid===uid);try{await DB.doc("reg/"+uid).delete();REG=REG.filter(x=>x.uid!==uid);if(r)log("Từ chối đăng ký: "+r.name,regD(r),"dk");save();toast("Đã từ chối đăng ký")}catch(e){toast("Thất bại: "+((e&&e.message)||e))}rr()}
+function aprv(id){const p=S.projects.find(x=>x.id===id);if(!p)return;p.ap="ok";log("Duyệt bài tập lớn: "+p.title,"Hạn: "+(p.due||"không có"),"da");save();toast("Đã duyệt bài tập lớn");rr()}
+document.addEventListener("keydown",e=>{
+if(e.key!=="Enter"||e.isComposing||e.keyCode===229||e.shiftKey)return;
+const t=e.target;if(!t||t.tagName!=="INPUT"||["checkbox","hidden","file","button","radio"].includes(t.type))return;
+const c=t.closest(".add,.login"),b=c&&[...c.querySelectorAll("button.btn")].filter(x=>!x.classList.contains("alt")&&!x.disabled).pop();
+e.preventDefault();if(b)b.click();else t.blur()});
+const cntR=sid=>Object.keys(S.reports).filter(k=>k.startsWith(sid+"_")).length;
+function homeX(){const St=S.students,days=[...Array(7)].map((_,i)=>ymd(new Date(Date.now()-(6-i)*864e5)));
+const cnt=days.map(d=>St.filter(s=>S.reports[s.id+"_"+d]).length),mx=Math.max(1,St.length);
+const rk=St.map(s=>({s,n:cntR(s.id),st:streak(s.id)})).sort((a,b)=>b.n-a.n||b.st-a.st);
+const miss=St.filter(s=>!S.reports[s.id+"_"+td0()]);
+return `<div class="card"><h2>📈 Báo cáo 7 ngày qua</h2><div style="display:flex;align-items:flex-end;gap:6px;height:100px">${cnt.map((c,i)=>`<div style="flex:1;text-align:center"><div style="height:${Math.round(c/mx*60)}px;background:var(--pr);border-radius:4px 4px 0 0;min-height:2px"></div><div class="mu" style="font-size:11px">${days[i].slice(5)}</div><div class="mu" style="font-size:11px">${c}</div></div>`).join("")}</div></div>
+<div class="card"><h2>🏆 Xếp hạng chuyên cần</h2>${rk.map((r,i)=>`<div class="row"><span class="g">${["🥇","🥈","🥉"][i]||(i+1)+"."} ${esc(r.s.name)}</span><span class="mu">${r.n} báo cáo · 🔥${r.st}</span></div>`).join("")||'<div class="empty">Chưa có dữ liệu</div>'}</div>
+${miss.length?`<div class="card" style="border-color:var(--wa)"><h2>🔔 Chưa báo cáo hôm nay</h2>${miss.map(s=>esc(s.name)).join(", ")}</div>`:""}
+<div class="add"><button class="btn alt" onclick="copyX()">📋 Sao chép bảng tiến độ (dán vào Excel)</button></div>`}
+function copyX(){const A=S.assignments,rows=[["Sinh viên","Mã",...A.map(a=>a.title),...S.projects.map(p=>"ĐA: "+p.title),"% bài tập","Số báo cáo"]];
+vis().forEach(s=>rows.push([s.name,s.code,...A.map(a=>{const c=g(a.id,s.id);return ST[c.st]+(c.sc!==""?" ("+c.sc+")":"")}),...S.projects.map(p=>pgP(p,s.id)+"%"),stuProg(s).p+"%",cntR(s.id)]));
+const t=rows.map(r=>r.join("\t")).join("\n");
+(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>alert("Đã sao chép! Dán vào Excel hoặc Google Sheets."),()=>prompt("Sao chép bảng này:",t))}
+function rem(){const id=S.user.id,t=td0(),m=[],soon=ymd(new Date(Date.now()+2*864e5));
+if(!S.reports[id+"_"+t])m.push("📝 Bạn chưa báo cáo hôm nay");
+const chk=(ti,d,done)=>{if(!done&&d){if(d<t)m.push("⚠️ Quá hạn: "+ti);else if(d<=soon)m.push("⏰ Sắp đến hạn: "+ti)}};
+S.assignments.forEach(a=>chk(a.title,a.due,g(a.id,id).st==="done"));
+S.projects.forEach(p=>p.tasks.forEach(k=>chk(k.title,k.due,g2(k.id,id).st==="done")));
+return m.length?`<div class="card" style="border-color:var(--wa)"><h2>🔔 Nhắc việc</h2>${m.map(x=>`<div>${esc(x)}</div>`).join("")}</div>`:""}
+function bcA(){return `<div class="card"><h2>Giao việc cho cả lớp (${esc(DD)})</h2><div class="add"><input id="ct" placeholder="Công việc..."><button class="btn" onclick="giao()">Giao</button></div></div>`}
+function giao(){const t=$("#ct").value.trim();if(!t)return;log("Giao việc cho cả lớp: "+trunc(t,60),"Ngày "+DD+" · Giao cho "+vis().length+" sinh viên (lớp: "+([...new Set(vis().map(s=>s.cls))].filter(Boolean).join(", ")||"—")+")","bc");vis().forEach(s=>{DIRTY.add(s.id);S.daily.push({id:Date.now()+Math.floor(Math.random()*999),sid:s.id,date:DD,text:t,done:false,gv:1})});save();render()}
+const gmOf=(p,s)=>S.gm[p.id+"_"+s]||{g:0,lead:false};
+function grpAvg(p,gid){const m=S.students.filter(s=>gmOf(p,s.id).g===gid);return m.length?Math.round(m.reduce((a,s)=>a+pgP(p,s.id),0)/m.length):0}
+function grpSel(p,s){const c=gmOf(p,s),G=p.groups||[];if(!G.length)return "";
+return `<select onchange="setG(${p.id},${s},this.value)"><option value="0">Chưa có nhóm</option>${G.map(x=>`<option value="${x.id}" ${c.g===x.id?"selected":""}>${esc(x.name)}</option>`).join("")}</select>${c.g?`<button class="del" style="color:var(--wa)" title="Nhóm trưởng" onclick="setL(${p.id},${s})">${c.lead?"⭐":"☆"}</button>`:""}`}
+function setG(p,s,v){const pr=S.projects.find(x=>x.id===p),G=pr.groups||[],nm=id=>id?(G.find(x=>x.id===id)||{name:"?"}).name:"chưa có nhóm";log("Chia nhóm","Bài tập lớn: "+pr.title+" · Sinh viên: "+sName(s)+" · Nhóm: "+nm(gmOf(pr,s).g)+" → "+nm(+v),"da");S.gm[p+"_"+s]={g:+v,lead:false};save();render()}
+function setL(p,s){const c=S.gm[p+"_"+s];c.lead=!c.lead;log(c.lead?"Chọn nhóm trưởng":"Bỏ nhóm trưởng","Bài tập lớn: "+(S.projects.find(x=>x.id===p)||{}).title+" · Sinh viên: "+sName(s),"da");save();render()}
+function addG(pid){const n=$("#gn"+pid).value.trim();if(!n)return;const p=S.projects.find(x=>x.id===pid);(p.groups=p.groups||[]).push({id:S.nid++,name:n});log("Tạo nhóm: "+n,"Bài tập lớn: "+p.title,"da");save();render()}
+function grpInfo(p,id){const c=gmOf(p,id),G=(p.groups||[]).find(x=>x.id===c.g);if(!c.g||!G)return "";
+const ms=S.students.filter(s=>gmOf(p,s.id).g===c.g);
+return `<div class="tag" style="display:inline-block;margin:6px 0">👥 Nhóm ${esc(G.name)}: ${ms.map(s=>esc(s.name)+(gmOf(p,s.id).lead?" ⭐":"")+" ("+pgP(p,s.id)+"%)").join(", ")}</div>`}
+render();setTimeout(seal,800);
+</script>
+<style id="office">
+:root{--bg:#f3f2f1;--card:#fff;--tx:#201f1e;--mu:#605e5c;--bd:#e1dfdd;--pr:#0f6cbd;--hd:#0f6cbd;--tr:#edebe9;--hv:#faf9f8;--ok:#107c10;--wa:#986f0b;--er:#d13438}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1a19;--card:#292827;--tx:#f3f2f1;--mu:#a19f9d;--bd:#3b3a39;--tr:#3b3a39;--hv:#323130}}
+:root[data-theme="dark"]{--bg:#1b1a19;--card:#292827;--tx:#f3f2f1;--mu:#a19f9d;--bd:#3b3a39;--tr:#3b3a39;--hv:#323130}
+html{background:var(--hd)}
+body{background:var(--bg);font:14px/1.45 "Segoe UI","Segoe UI Variable",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;min-height:100vh}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:12;max-width:none;margin:0;padding:0 14px;height:48px;display:flex;align-items:center;background:var(--hd);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+header .top{width:100%;margin:0}
+header h1,#ttl{font-size:16px;font-weight:600;color:#fff}
+header .btn.alt{background:rgba(255,255,255,.16);color:#fff;border:0;padding:5px 10px}
+header .btn.alt:hover{background:rgba(255,255,255,.28)}
+header .av{outline:2px solid rgba(255,255,255,.75)}
+main{max-width:1132px;padding:16px 18px 40px}
+.pg{font-size:20px;font-weight:600;margin:2px 0 14px}
+.card{border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.06);padding:16px}
+.card h2{font-size:15px;font-weight:600;margin:0 0 12px;padding-bottom:10px;border-bottom:1px solid var(--bd)}
+.stat{border-radius:4px;border-top:3px solid var(--pr);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.stat b{font-size:26px;font-weight:600}
+.row{padding:10px 8px;margin:0 -8px}.row:hover{background:var(--hv)}
+.bar{height:6px;border-radius:0}.bar i{border-radius:0}
+input,select,textarea{border:1px solid #8a8886;border-radius:2px;background:var(--card);padding:7px 10px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--pr);box-shadow:0 0 0 1px var(--pr)}
+.btn{border-radius:2px;font-weight:600;padding:7px 16px}
+.btn:hover{filter:brightness(.92)}
+.btn.alt{background:var(--card);color:var(--tx);border:1px solid #8a8886}
+.btn:focus-visible,#nav button:focus-visible,.del:focus-visible{outline:2px solid var(--pr);outline-offset:2px}
+.tag{border-radius:2px;border:1px solid var(--bd);padding:2px 8px}
+th{background:var(--hv);color:var(--mu);font-weight:600;border-bottom:2px solid var(--bd)}
+tr:hover td{background:var(--hv)}
+.login{border-top:4px solid var(--pr)}
+#nav button{border:0;border-radius:2px;background:none;color:var(--tx);padding:10px 12px;margin-bottom:2px;font-size:14px}
+#nav button:hover{background:var(--tr)}
+#nav button.on{background:var(--tr);color:var(--pr);font-weight:600;box-shadow:inset 3px 0 0 var(--pr)}
+@media (min-width:900px){
+#hb,#ov{display:none!important}
+#nav{transform:none!important;visibility:visible!important;left:0!important;top:calc(48px + env(safe-area-inset-top,0px));width:232px;max-width:none;padding:10px 8px;z-index:6;border-right:1px solid var(--bd)}
+#nav:empty{display:none}
+#nav button{padding:8px 12px;margin-bottom:1px}
+.mh{padding:4px 4px 12px}
+main{margin:0 0 0 232px;max-width:1132px}
+body:has(#nav:empty) main{margin:0 auto}
+}
+</style>
+</body>
+</html>
