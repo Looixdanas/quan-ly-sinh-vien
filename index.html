@@ -321,7 +321,7 @@ const regL=()=>{const u=S.user;if(!u)return [];return REG.filter(r=>r.type==="gv
 function regNote(){if(!(can("students")||can("accounts")))return "";const n=regL().length;
 return n?`<div class="card" style="border-color:var(--wa)"><h2>🆕 ${n} đăng ký học sinh chờ duyệt</h2><button class="btn" data-ok="1" onclick="go('dk')">Xem và duyệt</button></div>`:""}
 function regCard(){return `<div class="card login"><h2>Đăng ký học sinh</h2><p class="mu">Gửi yêu cầu, giáo viên sẽ duyệt.</p><input type="hidden" id="rt" value="hs"><input id="rn" placeholder="Họ tên"><input id="re" type="email" placeholder="Gmail của bạn"><input id="rc" placeholder="Mã sinh viên (nếu có)"><input id="rl" placeholder="Lớp" list="cl">${clList()}<button class="btn" onclick="sendReg()">Gửi đăng ký</button></div>`}
-function localV(){return `<div class="card login"><h2>Đăng nhập (cục bộ)</h2><input id="u" placeholder="gv123 = quản trị, hoặc mã sinh viên"><button class="btn" onclick="doLogin()">Đăng nhập</button></div>`+(MODE==="ql"?"":regCard())}
+function localV(){return `<div class="card login"><h2>Đăng nhập (cục bộ)</h2><input id="u" placeholder="Hãy nhập mã đăng nhập"><button class="btn" onclick="doLogin()">Đăng nhập</button></div>`+(MODE==="ql"?"":regCard())}
 const mask=e=>{const[a,b]=e.split("@");return a.slice(0,2)+"***@"+b};
 async function addS(){const n=$("#n").value.trim();if(!n)return;const em=($("#se").value||"").trim().toLowerCase();
 const o={id:S.nid++,name:n,code:$("#c").value.trim(),cls:ncls($("#l").value)};
@@ -365,7 +365,7 @@ function loginV(){return outV()||loginV0()}
 function outV(){if(!DB||!NOAUTO||!(ISGV||ACC[UID]))return "";
 return `<div class="card login"><h2>Đã đăng xuất</h2><p>Ứng dụng nhận diện bạn theo tài khoản claude.ai đang đăng nhập trên trình duyệt này. Muốn dùng tài khoản khác: đăng xuất hoặc chuyển tài khoản trong claude.ai, rồi mở lại link này.</p><button class="btn" style="width:100%;margin-bottom:8px" onclick="relog()">Đăng nhập lại tài khoản này</button><button class="btn alt" style="width:100%" onclick="setMode('')">Chọn cổng khác</button></div>`}
 function loginV0(){if(!DB)return localV();
-if(!DB)return `<div class="card login"><h2>Đăng nhập (cục bộ)</h2><input id="u" placeholder="gv123 = quản trị, hoặc mã sinh viên"><button class="btn" onclick="doLogin()">Đăng nhập</button></div>`;
+if(!DB)return `<div class="card login"><h2>Đăng nhập (cục bộ)</h2><input id="u" placeholder="Hãy nhập mã đăng nhập"><button class="btn" onclick="doLogin()">Đăng nhập</button></div>`;
 if(!ready)return '<div class="card empty">Đang tải... (nếu quá lâu, chủ trang cần mở trang trước để khởi tạo dữ liệu)</div>';
 if(PEND)return '<div class="card login"><h2>⏳ Đã gửi đăng ký</h2><p>Đăng ký của bạn đang chờ duyệt. Khi được duyệt, mở lại trang là vào được.</p></div>';
 if(MODE==="ql")return `<div class="card login"><h2>Kích hoạt tài khoản quản lý</h2><p class="mu">Nhập mã kích hoạt do quản trị cấp.</p><input id="u" placeholder="Mã kích hoạt" autocomplete="off"><button class="btn" onclick="activate()">Kích hoạt</button><p class="mu"><a href="#" onclick="setMode('hs');return false">← Về cổng học sinh</a></p></div>`;
